@@ -3,7 +3,7 @@ pandas
 pydantic
 langchain
 langchain-core
-langchain-google-genai
+langchain-groq
 psycopg2-binary
 streamlit
 openpyxl

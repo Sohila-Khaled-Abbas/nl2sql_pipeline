@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from sqlalchemy import create_engine, text
 from src.pipeline import NL2SQLPipeline
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 import logging
 import os
 
@@ -33,7 +33,7 @@ if 'pipeline' not in st.session_state:
 
 def init_pipeline(api_key: str, db_uri: str, model_name: str, uploaded_files=None):
     try:
-        os.environ["GOOGLE_API_KEY"] = api_key
+        os.environ["GROQ_API_KEY"] = api_key
         engine = create_engine(db_uri)
         
         # Load uploaded data if present
@@ -56,7 +56,7 @@ def init_pipeline(api_key: str, db_uri: str, model_name: str, uploaded_files=Non
                         for stmt in statements:
                             conn.execute(text(stmt))
                             
-        llm = ChatGoogleGenerativeAI(temperature=0, model=model_name)
+        llm = ChatGroq(temperature=0, model_name=model_name)
         st.session_state.pipeline = NL2SQLPipeline(engine=engine, llm=llm, max_retries=2)
         return True, "Pipeline initialized successfully!"
     except Exception as e:
@@ -68,7 +68,7 @@ with st.sidebar:
     st.title("⚙️ Configuration")
     st.markdown("Enter your credentials to connect the NLP engine to your database.")
     
-    api_key_input = st.text_input("Google API Key", type="password", help="Ensure your key has access to the chosen Gemini model. Get one for free at Google AI Studio.")
+    api_key_input = st.text_input("Groq API Key", type="password", help="Get a free key at console.groq.com.")
     
     db_mode = st.radio("Data Source", ["File Upload (In-Memory DB)", "External Database URL"])
     
@@ -80,11 +80,11 @@ with st.sidebar:
     else:
         db_uri_input = st.text_input("Database Connection URI", help="Example: postgresql://user:password@localhost:5432/db")
     
-    model_choice = st.selectbox("Gemini Model", ["gemini-2.0-flash", "gemini-2.0-pro-exp-02-05", "gemini-1.5-pro-latest", "gemini-1.5-flash-latest"])
+    model_choice = st.selectbox("Groq Model", ["llama3-70b-8192", "llama3-8b-8192", "mixtral-8x7b-32768", "gemma-7b-it"])
     
     if st.button("Connect & Initialize"):
         if not api_key_input:
-            st.error("Please provide a Google API Key.")
+            st.error("Please provide a Groq API Key.")
         elif db_mode == "External Database URL" and not db_uri_input:
             st.error("Please provide a Database Connection URI.")
         else:
