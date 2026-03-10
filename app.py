@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from sqlalchemy import create_engine
 from src.pipeline import NL2SQLPipeline
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 import logging
 import os
 
@@ -31,11 +31,11 @@ except FileNotFoundError:
 if 'pipeline' not in st.session_state:
     st.session_state.pipeline = None
 
-def init_pipeline(api_key: str, db_uri: str, model_name: str = "gpt-4"):
+def init_pipeline(api_key: str, db_uri: str, model_name: str = "gemini-2.0-flash"):
     try:
-        os.environ["OPENAI_API_KEY"] = api_key
+        os.environ["GOOGLE_API_KEY"] = api_key
         engine = create_engine(db_uri)
-        llm = ChatOpenAI(temperature=0, model=model_name)
+        llm = ChatGoogleGenerativeAI(temperature=0, model=model_name)
         st.session_state.pipeline = NL2SQLPipeline(engine=engine, llm=llm, max_retries=2)
         return True, "Pipeline initialized successfully!"
     except Exception as e:
@@ -47,15 +47,15 @@ with st.sidebar:
     st.title("⚙️ Configuration")
     st.markdown("Enter your credentials to connect the NLP engine to your database.")
     
-    api_key_input = st.text_input("OpenAI API Key", type="password", help="Ensure your key has access to the chosen model.")
+    api_key_input = st.text_input("Google API Key", type="password", help="Ensure your key has access to the chosen Gemini model. Get one for free at Google AI Studio.")
     
     db_uri_input = st.text_input("Database Connection URI", value="sqlite:///:memory:", help="Example: postgresql://user:password@localhost:5432/db")
     
-    model_choice = st.selectbox("OpenAI Model", ["gpt-4", "gpt-3.5-turbo"])
+    model_choice = st.selectbox("Gemini Model", ["gemini-2.0-flash", "gemini-1.5-pro"])
     
     if st.button("Connect & Initialize"):
         if not api_key_input:
-            st.error("Please provide an OpenAI API Key.")
+            st.error("Please provide a Google API Key.")
         elif not db_uri_input:
             st.error("Please provide a Database Connection URI.")
         else:

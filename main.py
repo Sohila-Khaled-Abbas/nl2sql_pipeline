@@ -1,5 +1,5 @@
 import logging
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from sqlalchemy import create_engine
 from src.pipeline import NL2SQLPipeline
 
@@ -13,8 +13,8 @@ def main():
         engine = create_engine("sqlite:///:memory:")
         
         # Prefer deterministic, highly logical LLMs
-        # Make sure OPENAI_API_KEY is set in your environment
-        llm = ChatOpenAI(temperature=0, model="gpt-4")
+        # Make sure GOOGLE_API_KEY is set in your environment
+        llm = ChatGoogleGenerativeAI(temperature=0, model="gemini-2.0-flash")
         
         # Initialize Orchestrator
         pipeline = NL2SQLPipeline(engine=engine, llm=llm, max_retries=2)
