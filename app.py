@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from src.pipeline import NL2SQLPipeline
 from langchain_google_genai import ChatGoogleGenerativeAI
 import logging
@@ -31,10 +31,31 @@ except FileNotFoundError:
 if 'pipeline' not in st.session_state:
     st.session_state.pipeline = None
 
-def init_pipeline(api_key: str, db_uri: str, model_name: str = "gemini-2.0-flash"):
+def init_pipeline(api_key: str, db_uri: str, model_name: str, uploaded_files=None):
     try:
         os.environ["GOOGLE_API_KEY"] = api_key
         engine = create_engine(db_uri)
+        
+        # Load uploaded data if present
+        if uploaded_files:
+            with engine.begin() as conn:
+                for uploaded_file in uploaded_files:
+                    file_name = uploaded_file.name
+                    if file_name.endswith('.csv'):
+                        df = pd.read_csv(uploaded_file)
+                        table_name = file_name.rsplit('.', 1)[0].replace(' ', '_').lower()
+                        df.to_sql(table_name, engine, if_exists='replace', index=False)
+                    elif file_name.endswith(('.xlsx', '.xls')):
+                        df = pd.read_excel(uploaded_file)
+                        table_name = file_name.rsplit('.', 1)[0].replace(' ', '_').lower()
+                        df.to_sql(table_name, engine, if_exists='replace', index=False)
+                    elif file_name.endswith('.sql'):
+                        sql_script = uploaded_file.getvalue().decode("utf-8")
+                        # Basic split by semicolon for multiple statements
+                        statements = [s.strip() for s in sql_script.split(';') if s.strip()]
+                        for stmt in statements:
+                            conn.execute(text(stmt))
+                            
         llm = ChatGoogleGenerativeAI(temperature=0, model=model_name)
         st.session_state.pipeline = NL2SQLPipeline(engine=engine, llm=llm, max_retries=2)
         return True, "Pipeline initialized successfully!"
@@ -49,18 +70,26 @@ with st.sidebar:
     
     api_key_input = st.text_input("Google API Key", type="password", help="Ensure your key has access to the chosen Gemini model. Get one for free at Google AI Studio.")
     
-    db_uri_input = st.text_input("Database Connection URI", value="sqlite:///:memory:", help="Example: postgresql://user:password@localhost:5432/db")
+    db_mode = st.radio("Data Source", ["File Upload (In-Memory DB)", "External Database URL"])
+    
+    db_uri_input = "sqlite:///:memory:"
+    uploaded_files = None
+    
+    if db_mode == "File Upload (In-Memory DB)":
+        uploaded_files = st.file_uploader("Upload CSV, Excel, or SQL script files", type=["csv", "sql", "xlsx", "xls"], accept_multiple_files=True)
+    else:
+        db_uri_input = st.text_input("Database Connection URI", help="Example: postgresql://user:password@localhost:5432/db")
     
     model_choice = st.selectbox("Gemini Model", ["gemini-2.0-flash", "gemini-1.5-pro"])
     
     if st.button("Connect & Initialize"):
         if not api_key_input:
             st.error("Please provide a Google API Key.")
-        elif not db_uri_input:
+        elif db_mode == "External Database URL" and not db_uri_input:
             st.error("Please provide a Database Connection URI.")
         else:
-            with st.spinner("Connecting to database..."):
-                success, msg = init_pipeline(api_key_input, db_uri_input, model_choice)
+            with st.spinner("Connecting and preparing data..."):
+                success, msg = init_pipeline(api_key_input, db_uri_input, model_choice, uploaded_files)
                 if success:
                     st.success(msg)
                 else:
