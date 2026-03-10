@@ -1,0 +1,7 @@
+sqlalchemy
+pandas
+pydantic
+langchain
+langchain-core
+langchain-openai
+psycopg2-binary
