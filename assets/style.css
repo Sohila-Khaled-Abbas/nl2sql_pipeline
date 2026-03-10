@@ -1,0 +1,64 @@
+/* Custom Streamlit Styles */
+
+/* Base Typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Glassmorphic Container for main content areas */
+.stApp {
+    background: radial-gradient(circle at top left, #1e1b4b, #0f172a);
+}
+
+/* Sidebar styling */
+[data-testid="stSidebar"] {
+    background-color: rgba(30, 41, 59, 0.6) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Main Input Area styling */
+div[data-baseweb="textarea"] > div {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(139, 92, 246, 0.3) !important;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+div[data-baseweb="textarea"] > div:focus-within {
+    border-color: rgba(139, 92, 246, 0.8) !important;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Custom Buttons */
+.stButton > button {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1) !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    padding: 10px 24px !important;
+    transition: transform 0.2s, box-shadow 0.2s !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2) !important;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 12px rgba(139, 92, 246, 0.4) !important;
+}
+
+/* DataFrame styling */
+[data-testid="stDataFrame"] {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Customizing the Success/Error messages */
+.stAlert {
+    border-radius: 8px !important;
+    backdrop-filter: blur(8px) !important;
+}
